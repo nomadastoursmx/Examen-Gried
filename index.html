@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Examen de Atención Médica Prehospitalaria</title>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--tx:#17191c;--mut:#5d636b;--bd:#dfe2e6;--ac:#b3262b;--ok:#1c7a4a;--bad:#b3262b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--card:#1e2126;--tx:#e9ebed;--mut:#a3a9b1;--bd:#333940;--ac:#e0565b;--ok:#4fbe86;--bad:#e0565b}}
+:root[data-theme="dark"]{--bg:#15171a;--card:#1e2126;--tx:#e9ebed;--mut:#a3a9b1;--bd:#333940;--ac:#e0565b;--ok:#4fbe86;--bad:#e0565b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:760px;margin:0 auto;padding:20px 16px 64px}
+header{background:var(--ac);color:#fff;padding:22px 16px;text-align:center}
+header h1{margin:0;font-size:1.15rem;letter-spacing:.3px}
+header p{margin:6px 0 0;font-size:.85rem;opacity:.9}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin:14px 0}
+label{display:block;font-size:.82rem;color:var(--mut);margin-bottom:4px}
+input{width:100%;padding:10px;border:1px solid var(--bd);border-radius:7px;background:var(--bg);color:var(--tx);font-size:1rem}
+.q{font-weight:600;margin:0 0 10px}
+.q span{color:var(--ac)}
+.op{display:flex;gap:9px;align-items:flex-start;padding:9px 10px;border:1px solid var(--bd);border-radius:7px;margin-bottom:7px;cursor:pointer}
+.op:hover{border-color:var(--ac)}
+.op input{width:auto;margin:3px 0 0}
+.sec{margin:26px 0 6px;font-size:.8rem;letter-spacing:1px;text-transform:uppercase;color:var(--mut);font-weight:700}
+button{width:100%;padding:14px;border:0;border-radius:8px;background:var(--ac);color:#fff;font-size:1rem;font-weight:600;cursor:pointer}
+button.alt{background:#25d366}
+button.gh{background:transparent;color:var(--mut);border:1px solid var(--bd);font-weight:500}
+.score{font-size:2.6rem;font-weight:700;text-align:center;margin:4px 0}
+.lvl{text-align:center;font-weight:600;margin-bottom:10px}
+.rev{font-size:.9rem;border-top:1px solid var(--bd);padding:8px 0}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+.note{font-size:.8rem;color:var(--mut)}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header>
+<h1>Examen de Atención Médica Prehospitalaria</h1>
+<p>20 preguntas · 1 punto c/u · un solo intento</p>
+</header>
+<div class="w">
+
+<div id="start" class="card">
+<p class="note" style="margin-top:0">Escribe tus datos para comenzar. El examen solo puede presentarse <b>una vez</b> en este dispositivo.</p>
+<label>Nombre del elemento</label><input id="nom" placeholder="Nombre completo">
+<div style="height:10px"></div>
+<label>Corporación / adscripción (opcional)</label><input id="corp" placeholder="Ej. IBECH Región 6">
+<div style="height:14px"></div>
+<button onclick="begin()">Iniciar examen</button>
+</div>
+
+<div id="quiz" class="hide"></div>
+<div id="sendBox" class="hide">
+<div class="card">
+<button onclick="grade()">Terminar y calificar</button>
+<p class="note" style="text-align:center;margin-bottom:0">Al enviar no podrás modificar tus respuestas.</p>
+</div>
+</div>
+
+<div id="result" class="hide"></div>
+<div id="blocked" class="hide card"><p style="margin:0"><b>Este examen ya fue presentado en este dispositivo.</b></p><p class="note" id="bmsg"></p></div>
+
+</div>
+<script>
+var K="examen_amp_v1";
+var D=[
+["Al llegar a una escena, ¿cuál es la primera acción del personal prehospitalario?",["Valorar signos vitales","Acercarse inmediatamente al paciente","Evaluar la seguridad de la escena","Preguntar qué sucedió"],2],
+["En la valoración primaria, la prioridad inicial es:",["Circulación","Vía aérea","Exposición","Historia clínica"],1],
+["Un paciente inconsciente que no respira normalmente debe considerarse inicialmente como:",["Paciente con síncope","Paro cardiorrespiratorio","Crisis convulsiva","Estado postictal"],1],
+["En un adulto inconsciente que no respira normalmente, ¿qué debe hacerse?",["Tomar presión arterial antes de actuar","Iniciar RCP y activar/coordinar el sistema de emergencias","Administrar líquidos por vía oral","Colocarlo sentado"],1],
+["¿Cuál es la frecuencia recomendada de compresiones torácicas durante RCP en adultos?",["60–80/min","80–100/min","100–120/min","130–150/min"],2],
+["La profundidad aproximada de las compresiones torácicas en un adulto es:",["1–2 cm","3–4 cm","5–6 cm","7–8 cm"],2],
+["¿Cuál es una prioridad ante una hemorragia externa grave?",["Buscar antecedentes personales","Controlar la hemorragia","Administrar alimentos","Tomar temperatura"],1],
+["Un paciente presenta dificultad respiratoria severa, cianosis y alteración del estado mental. ¿Qué prioridad tiene?",["Realizar una entrevista extensa","Priorizar vía aérea y respiración","Trasladarlo sin valoración","Darle agua"],1],
+["La escala de Glasgow evalúa principalmente:",["Dolor, presión arterial y pulso","Apertura ocular, respuesta verbal y respuesta motora","Pupilas, glucosa y temperatura","Respiración, circulación y exposición"],1],
+["Una puntuación de Glasgow de 8 o menos indica:",["Estado neurológico normal","Alteración neurológica leve","Compromiso grave de conciencia","Hipoglucemia confirmada"],2],
+["La seguridad del equipo y de la escena debe considerarse antes de iniciar la atención.",["Verdadero","Falso"],0],
+["Si un paciente está consciente, nunca es necesario valorar la vía aérea.",["Verdadero","Falso"],1],
+["El uso de equipo de protección personal forma parte de las medidas de seguridad del personal prehospitalario.",["Verdadero","Falso"],0],
+["Una persona puede presentar un estado de choque aun cuando inicialmente tenga una presión arterial aparentemente normal.",["Verdadero","Falso"],0],
+["El paciente debe ser reevaluado durante el traslado y después de cualquier cambio en su condición.",["Verdadero","Falso"],0],
+["Llegas a un accidente de motocicleta. Encuentras a un paciente consciente, con hemorragia abundante en una extremidad y piel pálida y fría. ¿Cuál es tu prioridad?",["Preguntar sus antecedentes médicos","Controlar inmediatamente la hemorragia grave","Darle agua","Esperar a que llegue la ambulancia"],1],
+["Encuentras a un paciente inconsciente que respira normalmente y no presenta trauma evidente. ¿Qué debes hacer inicialmente?",["Iniciar RCP inmediatamente","Valorar vía aérea, respiración y circulación y mantener vigilancia","Darle oxígeno sin realizar valoración","Sentarlo"],1],
+["Paciente diabético con alteración del estado mental. ¿Qué dato sería especialmente importante obtener si es posible?",["Color favorito","Glucemia capilar","Grupo sanguíneo únicamente","Última comida de hace una semana"],1],
+["Paciente politraumatizado posterior a una colisión vehicular. Presenta dolor cervical y alteración del estado de conciencia. ¿Qué debe considerarse?",["Posible lesión de columna cervical","Únicamente una lesión muscular","Que puede caminar sin valoración","Que no necesita inmovilización ni precauciones"],0],
+["Durante el traslado, el paciente previamente estable presenta deterioro súbito del estado de conciencia. ¿Qué debe hacer el equipo?",["Continuar el traslado sin intervenir","Reevaluar inmediatamente al paciente y corregir amenazas vitales","Esperar a llegar al hospital","Preguntar primero por sus antecedentes familiares"],1]];
+var L=["A","B","C","D"], nom="", corp="", done=null;
+function $(i){return document.getElementById(i)}
+try{var s=localStorage.getItem(K); if(s){done=JSON.parse(s)}}catch(e){}
+if(done){$("start").classList.add("hide");$("blocked").classList.remove("hide");
+ $("bmsg").textContent="Elemento: "+done.n+" · Calificación: "+done.p+"/20 ("+done.f+")";}
+function begin(){
+ nom=$("nom").value.trim(); corp=$("corp").value.trim();
+ if(!nom){alert("Escribe tu nombre para continuar.");return}
+ $("start").classList.add("hide");
+ var h="";
+ for(var i=0;i<20;i++){
+  if(i===0)h+='<div class="sec">I. Opción múltiple</div>';
+  if(i===10)h+='<div class="sec">II. Verdadero o falso</div>';
+  if(i===15)h+='<div class="sec">III. Casos clínicos</div>';
+  h+='<div class="card"><p class="q"><span>'+(i+1)+'.</span> '+D[i][0]+'</p>';
+  for(var j=0;j<D[i][1].length;j++)
+   h+='<label class="op"><input type="radio" name="q'+i+'" value="'+j+'"><span>'+(D[i][1].length>2?L[j]+') ':'')+D[i][1][j]+'</span></label>';
+  h+='</div>';
+ }
+ $("quiz").innerHTML=h; $("quiz").classList.remove("hide"); $("sendBox").classList.remove("hide");
+ window.scrollTo(0,0);
+}
+function grade(){
+ var ans=[],falt=[];
+ for(var i=0;i<20;i++){
+  var e=document.querySelector('input[name="q'+i+'"]:checked');
+  ans.push(e?parseInt(e.value):-1); if(!e)falt.push(i+1);
+ }
+ if(falt.length){alert("Faltan por responder las preguntas: "+falt.join(", "));return}
+ if(!confirm("¿Enviar tus respuestas? No podrás repetir el examen."))return;
+ var p=0,rev="";
+ for(var i=0;i<20;i++){
+  var c=ans[i]===D[i][2]; if(c)p++;
+  rev+='<div class="rev"><b>'+(i+1)+'.</b> <span class="'+(c?"ok":"bad")+'">'+(c?"Correcta":"Incorrecta")+'</span>'+
+   (c?"":' — Respuesta correcta: <b>'+(D[i][1].length>2?L[D[i][2]]+') ':'')+D[i][1][D[i][2]]+'</b>')+'</div>';
+ }
+ var f = p>=18?"Excelente — dominio operativo":p>=15?"Bueno — requiere reforzar algunos temas":p>=12?"Regular — necesita capacitación y práctica":"Deficiente — recomendable evaluación práctica y reforzamiento";
+ var fecha=new Date().toLocaleDateString("es-MX",{day:"2-digit",month:"long",year:"numeric"});
+ try{localStorage.setItem(K,JSON.stringify({n:nom,p:p,f:f}))}catch(e){}
+ var txt="*EXAMEN DE ATENCIÓN MÉDICA PREHOSPITALARIA*%0A"+
+  "Elemento: "+nom+"%0A"+(corp?"Adscripción: "+corp+"%0A":"")+
+  "Fecha: "+fecha+"%0A"+
+  "Calificación: *"+p+"/20*%0A"+"Nivel: "+f+"%0A%0A"+
+  "Respuestas: "+ans.map(function(a,i){return (i+1)+")"+(D[i][1].length>2?L[a]:D[i][1][a])}).join(", ");
+ $("quiz").classList.add("hide"); $("sendBox").classList.add("hide");
+ $("result").innerHTML='<div class="card"><div class="score">'+p+' / 20</div><div class="lvl">'+f+'</div>'+
+  '<p class="note" style="text-align:center">'+nom+(corp?" · "+corp:"")+' · '+fecha+'</p>'+
+  '<a href="https://wa.me/?text='+txt+'" target="_blank" rel="noopener" style="text-decoration:none"><button class="alt">Enviar resultado por WhatsApp</button></a>'+
+  '<div style="height:8px"></div><button class="gh" onclick="this.parentNode.querySelector(\'#rv\').classList.toggle(\'hide\')">Ver revisión</button>'+
+  '<div id="rv" class="hide" style="margin-top:10px">'+rev+'</div></div>';
+ $("result").classList.remove("hide"); window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
